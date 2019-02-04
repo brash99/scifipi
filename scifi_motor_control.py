@@ -7,9 +7,6 @@ from tkinter import simpledialog
 import serial, time
 import serial.tools.list_ports as port_list
 import binascii
-#For making threads
-#from multiprocessing import Pool
-#from multiprocessing.dummy import Pool as ThreadPool
 
 class Application(tk.Frame):
     ser = serial.Serial()
@@ -59,7 +56,6 @@ class Application(tk.Frame):
         menu.add_cascade(label='File', menu=file)
 
         comport = Menu(menu)
-        #comport.add_command(label='Show COM port', command=self.show_ports)
         comport.add_command(label='Connect COM port', command=self.connect_port)
         menu.add_cascade(label='COMPORT', menu=comport)
 
@@ -68,23 +64,6 @@ class Application(tk.Frame):
         menu.add_cascade(label='Motor', menu=motor)
 
 ################################################################################
-
-        #Below 3 buttons moved to menu bar
-        #self.hi_there = tk.Button(self)
-        #self.hi_there["text"] = "Show COM port"
-        #self.hi_there["command"] = self.show_ports
-
-        #self.hi_there.pack(side="top", padx=5, pady=5)
-
-        #self.connect = tk.Button(self)
-        #self.connect["text"] = "Connect COM port"
-        #self.connect["command"] = self.connect_port
-        #self.connect.pack(padx=5, pady=5)
-
-        #self.settings = tk.Button(self)
-        #self.settings["text"] = "Set Motor/Limits/Velocity"
-        #self.settings["command"] = self.configure
-        #self.settings.pack(padx=5, pady=5)
 
         #Motor Selection
         self.motor1option = Radiobutton(self, text="Left Motor", variable=var, value = 1, command=self.motor_select)
@@ -108,24 +87,6 @@ class Application(tk.Frame):
         self.farlimit.config(state=DISABLED)
         self.farlimit.pack(padx=5, pady=5)
 
-        #Zero Position Button
-        #self.resetpos = tk.Button(self)
-        #self.resetpos["text"] = "Zero Position"
-        #self.resetpos["command"] = self.reset_pos
-        #self.resetpos.pack(padx=5, pady=5)
-
-        #Not used, motor is polled continuosly and output to motor display label
-        #self.showpos = tk.Button(self)
-        #self.showpos["text"] = "Get Position"
-        #self.showpos["command"] = self.show_pos
-        #self.showpos.pack(padx=5, pady=5)
-
-        #Move Button
-        #self.move = tk.Button(self)
-        #self.move["text"] = "Move"
-        #self.move["command"] = self.go_next_pos
-        #self.move.pack(padx=5, pady=5)
-
         #Kill Motion Button
         self.killmotion = tk.Button(self)
         self.killmotion["text"] = "Kill Motion"
@@ -138,11 +99,6 @@ class Application(tk.Frame):
         self.getpositions["text"] = "Get Positions"
         self.getpositions["command"] = self.get_positions
         self.getpositions.pack(padx=5, pady=5)
-
-        #Distance Entry
-        #self.E1 = tk.Entry(self, bd=1)
-        #self.E1.insert(tk.END,"Enter Position")
-        #self.E1.pack(padx=5, pady=5)
 
         #Motor position display
         global left_pos
@@ -165,22 +121,6 @@ class Application(tk.Frame):
         self.update_motion_text() 
         motion_enabled_disabled = Label(self, textvariable = motion_enabled)
         motion_enabled_disabled.pack()
-
-	#initializing limit status as empty strings, will be updated by polling
-    #    left_home_lim = ""
-    #    left_far_lim = ""
-    #    right_home_lim = ""
-    #    right_far_lim = ""
-
-        #labels displaying limit status
-        #left_home_limit = Label(self, text = "Left Home Limit:" + left_home_lim)
-        #left_home_limit.pack()
-        #left_far_limit = Label(self, text = "Left Far Limit:" + left_far_lim)
-        #left_far_limit.pack()
-        #right_home_limit = Label(self, text = "Right Home Limit:" + right_home_lim)
-        #right_home_limit.pack()
-        #right_far_limit = Label(self, text = "Right Far Limit:" + right_far_lim)
-        #right_far_limit.pack()
 
 ################################################################################
 
@@ -243,7 +183,6 @@ class Application(tk.Frame):
             print ("Trying to move motor ",MI)
             command_string = 'F,C,I' + MI + 'M0,I' + MI + 'M-5000,I' + MI + 'M0,R'
             command_byte = command_string.encode()
-            #print ("String = ",command_string," Byte string = ",command_byte)
             time.sleep(0.5)
             Application.ser.write(command_byte)
             #Call limit_status function
@@ -258,9 +197,7 @@ class Application(tk.Frame):
             while not reached_limit:
                 time.sleep(0.5)
                 # read limit switch
-                #print ("calling check_limit function")
                 self.check_limit()
-                #print ("back from check_limit function")
                 time.sleep(0.5)
                 if MI == "1": print ("limit_list[0] = ",limit_list[0])
                 if MI == "2": print ("limit_list[2] = ",limit_list[2])
@@ -279,7 +216,6 @@ class Application(tk.Frame):
             print ("Trying to move motor ",MI)
             command_string = 'F,C,I' + MI + 'M-0,I' + MI + 'M5000,I' + MI + 'M-0,R'
             command_byte = command_string.encode()
-            #print ("String = ",command_string," Byte string = ",command_byte)
             time.sleep(0.5)
             Application.ser.write(command_byte)
             #Call limit_status function
@@ -294,9 +230,7 @@ class Application(tk.Frame):
             while not reached_limit:
                 time.sleep(0.5)
                 # read limit switch
-                #print ("calling check_limit function")
                 self.check_limit()
-                #print ("back from check_limit function")
                 time.sleep(0.5)
                 if MI == "1": print ("limit_list[1] = ",limit_list[1])
                 if MI == "2": print ("limit_list[3] = ",limit_list[3])
@@ -326,46 +260,6 @@ class Application(tk.Frame):
                     reached_limit = True
             print ("Finished getting positions")
             self.update_position_text()
-        except:
-            print("An error occurred, are you connected to the controller?")
-
-
-    def reset_pos(self):
-        try:
-            time.sleep(0.5)  #give the serial port sometime to receive the data
-            Application.ser.write('N'.encode()) #Register current position as 0
-        except:
-            print("An error occurred, are you connected to the controller?")
-
-    #below definition moved to the block that polls motor for real time position
-    #def show_pos(self):
-        #Application.ser.write('E,C,X,R'.encode())
-        #time.sleep(0.5)  #give the serial port sometime to receive the data
-        #response = Application.ser.readline()
-        #print(" read data: " + response.decode())
-
-    def go_next_pos(self):
-        try:
-            MI = str(var.get())
-            val = self.E1.get()
-            command = 'F,C,I' + MI + 'AM' + val +',R'
-            Application.ser.write(command.encode())
-#chooses which motor position will be polled, could not think of other variable name
-           # if MI == "1":
-           #     bogdan = "X"
-           #     command = 'F,C,' + bogdan + ',R'
-           #     Application.ser.write(command.encode())
-           #     current_pos = Application.ser.readline()
-           #     left_pos = str(current_pos.decode)
-           #     while():
-           # if MI == "2":
-           #     bogdan = "Y"
-           #     command = 'F,
-           #    Application.ser.write(command.encode())
-           #     current_pos = Application.ser.readline()
-           #     right_pos = str(current_pos.decode)
-           #     while():
-
         except:
             print("An error occurred, are you connected to the controller?")
 
@@ -408,25 +302,6 @@ class Application(tk.Frame):
             self.update_motion_text()
         except:
             pass
-
-    # def motor_position_poll(self):
-    #     #Inside try because execution will fail upon progam initialization, not immediately connected to motor controller
-    #     try:
-    #         while(True):
-    #             pass
-    #             #Application.ser.write('F,C,X,R'.encode())   #asks left motor for current position
-    #             #time.sleep(0.5)  #give the serial port sometime to receive the data
-    #             #responseleft = Application.ser.readline()
-    #             #left_pos = str(responseleft.decode)
-    #             #return left_pos
-    #             #time.sleep(0.5)
-    #             #Application.ser.write('F,C,Y,R'.encode())   #asks right motor for current position
-    #             #responseright = Application.ser.readline()
-    #             #right_pos = str(responseright.decode)
-    #             #return right_pos
-    #             #time.sleep(0.5)
-    #     except:
-    #         pass
 
 ################################################################################
 
@@ -495,6 +370,3 @@ if __name__ == "__main__":
 
     main = Application(root)
     root.mainloop()
-
-#app = Application(master=root)
-#app.mainloop()
